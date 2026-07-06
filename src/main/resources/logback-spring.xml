@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs}"/>
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Only wired up for the 'prod' profile - dev/test stay console-only for fast local
+         iteration (see application-dev.properties / application-test.properties). Each
+         service gets its own rotating file under ${LOG_PATH}, plus a dedicated error.log
+         that captures ERROR-level events regardless of where they came from. Only
+         operations (INFO) and problems (WARN/ERROR) are logged - no per-request DEBUG noise. -->
+    <springProfile name="prod">
+
+        <appender name="AUTH_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/auth-service.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/auth-service-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>200MB</totalSizeCap>
+                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>20MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+            <encoder><pattern>${LOG_PATTERN}</pattern></encoder>
+        </appender>
+
+        <appender name="TASK_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/task-service.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/task-service-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>200MB</totalSizeCap>
+                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>20MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+            <encoder><pattern>${LOG_PATTERN}</pattern></encoder>
+        </appender>
+
+        <appender name="USER_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/user-service.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/user-service-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>200MB</totalSizeCap>
+                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>20MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+            <encoder><pattern>${LOG_PATTERN}</pattern></encoder>
+        </appender>
+
+        <appender name="SECURITY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/security.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/security-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>200MB</totalSizeCap>
+                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>20MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+            <encoder><pattern>${LOG_PATTERN}</pattern></encoder>
+        </appender>
+
+        <!-- Catches ERROR-level events from anywhere in the app (e.g. GlobalExceptionHandler's
+             generic 500 handler) that aren't already covered by one of the service files above. -->
+        <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/error.log</file>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxHistory>60</maxHistory>
+                <totalSizeCap>200MB</totalSizeCap>
+                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>20MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+            <encoder><pattern>${LOG_PATTERN}</pattern></encoder>
+        </appender>
+
+        <logger name="com.tasktracker.service.AuthService" level="INFO" additivity="false">
+            <appender-ref ref="AUTH_FILE"/>
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="com.tasktracker.service.TaskService" level="INFO" additivity="false">
+            <appender-ref ref="TASK_FILE"/>
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="com.tasktracker.service.UserService" level="INFO" additivity="false">
+            <appender-ref ref="USER_FILE"/>
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <logger name="com.tasktracker.security" level="INFO" additivity="false">
+            <appender-ref ref="SECURITY_FILE"/>
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="dev,test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>
