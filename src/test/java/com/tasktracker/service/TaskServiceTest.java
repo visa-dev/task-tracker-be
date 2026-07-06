@@ -88,7 +88,7 @@ class TaskServiceTest {
 
         when(taskRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
-        Page<TaskDTO> result = taskService.getTasks(regularUser, null, /* ownerId ignored */ 999L, null, null, null, pageable);
+        Page<TaskDTO> result = taskService.getTasks(regularUser, null, null, /* ownerId ignored */ 999L, null, null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals(regularUser.getId(), result.getContent().get(0).getOwnerId());
@@ -106,8 +106,7 @@ class TaskServiceTest {
 
         when(taskRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
-        Page<TaskDTO> result = taskService.getTasks(adminUser, null, null, null, null, null, pageable);
-
+        Page<TaskDTO> result = taskService.getTasks(adminUser, null, null, null, null, null, null, pageable);
         assertEquals(2, result.getTotalElements());
     }
 
@@ -118,7 +117,7 @@ class TaskServiceTest {
         when(taskRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(userTask)));
 
-        Page<TaskDTO> result = taskService.getTasks(regularUser, null, null, null, true, null, pageable);
+        Page<TaskDTO> result = taskService.getTasks(regularUser, null, null, null, null, true, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals(regularUser.getId(), result.getContent().get(0).getOwnerId());
