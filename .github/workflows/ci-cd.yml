@@ -30,23 +30,30 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      # Cache Maven dependencies (FAST BUILD)
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
-      # Single build (tests + compile + coverage)
+      # Single build (test + coverage)
       - name: Build & Test
         run: mvn -B clean verify -Dspring.profiles.active=test
 
-      # SonarCloud scan (clean & minimal)
+      # -------------------------
+      # SONARCLOUD (FIXED VERSION)
+      # -------------------------
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
         run: |
           mvn -B sonar:sonar \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.organization=$SONAR_ORGANIZATION \
+            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
             -Dsonar.token=$SONAR_TOKEN
 
 # -------------------------
