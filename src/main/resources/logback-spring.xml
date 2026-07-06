@@ -16,7 +16,7 @@
          service gets its own rotating file under ${LOG_PATH}, plus a dedicated error.log
          that captures ERROR-level events regardless of where they came from. Only
          operations (INFO) and problems (WARN/ERROR) are logged - no per-request DEBUG noise. -->
-    <springProfile name="prod">
+    <springProfile name="prod,dev">
 
         <appender name="AUTH_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>${LOG_PATH}/auth-service.log</file>
