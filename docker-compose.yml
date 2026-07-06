@@ -1,0 +1,50 @@
+# LOCAL DEVELOPMENT ONLY. Production runs the backend image standalone on EC2, connecting
+# to a real RDS instance - see .github/workflows/ci-cd.yml and README.md "Deploying to AWS".
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: task-tracker-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: task_tracker
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+    container_name: task-tracker-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: task_tracker
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_USE_SSL: "false"
+      DB_SSL_MODE: DISABLED
+      APP_JWT_SECRET: change-this-in-production-please-use-a-long-random-string
+      APP_JWT_EXPIRATION_MS: 3600000
+      APP_ADMIN_USERNAME: admin
+      APP_ADMIN_PASSWORD: Admin@123
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
