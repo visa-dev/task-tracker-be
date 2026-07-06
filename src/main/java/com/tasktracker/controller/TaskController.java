@@ -6,6 +6,7 @@ import com.tasktracker.dto.TaskDTO;
 import com.tasktracker.dto.TaskRequest;
 import com.tasktracker.dto.TaskStatsResponse;
 import com.tasktracker.dto.TaskStatusUpdateRequest;
+import com.tasktracker.entity.TaskPriority;
 import com.tasktracker.entity.TaskStatus;
 import com.tasktracker.entity.User;
 import com.tasktracker.service.TaskService;
@@ -35,6 +36,7 @@ public class TaskController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) TaskStatus status,
+            @RequestParam(required = false) TaskPriority priority,
             @RequestParam(required = false) Long ownerId,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean unassigned,
@@ -42,7 +44,7 @@ public class TaskController {
 
         User currentUser = userService.getCurrentUser(authentication);
         Pageable pageable = PageRequest.of(page, size);
-        Page<TaskDTO> tasks = taskService.getTasks(currentUser, status, ownerId, search, unassigned, overdue, pageable);
+        Page<TaskDTO> tasks = taskService.getTasks(currentUser, status, priority, ownerId, search, unassigned, overdue, pageable);
         return ResponseEntity.ok(ApiResponse.success("Tasks retrieved", tasks));
     }
 

@@ -40,14 +40,14 @@ public class TaskService {
     private final TaskEventPublisher taskEventPublisher;
 
     @Transactional(readOnly = true)
-    public Page<TaskDTO> getTasks(User currentUser, TaskStatus status, Long ownerId, String search,
-                                   Boolean unassigned, Boolean overdue, Pageable pageable) {
+    public Page<TaskDTO> getTasks(User currentUser, TaskStatus status, TaskPriority priority, Long ownerId,
+                                   String search, Boolean unassigned, Boolean overdue, Pageable pageable) {
         boolean isAdmin = currentUser.getRole() == Role.ROLE_ADMIN;
         boolean unassignedOnly = isAdmin && Boolean.TRUE.equals(unassigned);
         boolean overdueOnly = Boolean.TRUE.equals(overdue);
         Long effectiveOwnerId = isAdmin ? ownerId : currentUser.getId();
 
-        Specification<Task> spec = buildSpecification(effectiveOwnerId, status, search, unassignedOnly, overdueOnly);
+        Specification<Task> spec = buildSpecification(effectiveOwnerId, status, priority, search, unassignedOnly, overdueOnly);
         return taskRepository.findAll(spec, pageable).map(TaskDTO::fromEntity);
     }
 
@@ -264,8 +264,8 @@ public class TaskService {
         }
     }
 
-    private Specification<Task> buildSpecification(Long ownerId, TaskStatus status, String search,
-                                                     boolean unassignedOnly, boolean overdueOnly) {
+    private Specification<Task> buildSpecification(Long ownerId, TaskStatus status, TaskPriority priority,
+                                                     String search, boolean unassignedOnly, boolean overdueOnly) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -277,6 +277,10 @@ public class TaskService {
 
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (priority != null) {
+                predicates.add(cb.equal(root.get("priority"), priority));
             }
 
             if (search != null && !search.isBlank()) {
