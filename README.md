@@ -6,6 +6,17 @@ Spring Boot REST + WebSocket API for the Task Tracker app: JWT auth, role-based 
 
 Stack: Spring Boot 3.2 · Spring Security 6 (JWT) · Spring Data JPA · MySQL / AWS RDS · WebSocket (STOMP) · Spring Boot Actuator · JaCoCo · SonarQube
 
+## DevOps & CI/CD Highlights
+
+This project demonstrates **production-ready DevOps practices**:
+
+- **GitHub Actions CI/CD Pipeline**: Automated build, test, and deployment on every push to `main`
+- **AWS Integration**: Docker images pushed to Amazon ECR, deployed to EC2 with automatic container updates
+- **SonarQube/SonarCloud**: Continuous code quality analysis with coverage metrics via JaCoCo
+- **Checkstyle**: Automated code style enforcement using Google Java Style Guide
+- **Zero-Downtime Deployment**: Graceful container restart with health checks
+- **Environment-Based Configuration**: Single codebase works across local, Docker, and production AWS environments
+
 ---
 
 ## Setup Instructions
@@ -16,11 +27,11 @@ Stack: Spring Boot 3.2 · Spring Security 6 (JWT) · Spring Data JPA · MySQL / 
 ```bash
 docker compose up --build
 ```
-Starts MySQL + the backend together at `http://localhost:8080`, using the `dev` profile (console logging, SQL echoed).
+Starts MySQL + the backend together at `http://localhost:8080`, using the `prod` profile with environment variables (quieter console logs, no SQL echoed).
 
 **Option B — Run directly with Maven:**
 1. Have a local MySQL reachable (or use Option A instead).
-2. Copy `.env.example` to `.env` for reference — Spring Boot doesn't auto-load `.env` files; either `export` the variables yourself or rely on the built-in defaults, which work against `localhost:3306` with `root`/`root`.
+2. Copy `.env.example` to `.env` for reference — Spring Boot doesn't auto-load `.env` files; either `export` the variables yourself or rely on the built-in defaults, which work against `localhost:3306/task_tracker` with `root`/`root`.
 3. Run:
 ```bash
    mvn spring-boot:run
@@ -176,10 +187,33 @@ LOG_PATH=/app/logs
 | `SONAR_PROJECT_KEY` | Project key as registered in SonarQube/SonarCloud |
 
 **5. Pipeline flow** (`.github/workflows/ci-cd.yml`):
-1. **test** — Checkstyle (non-blocking) + `mvn test` (H2) + coverage report, on every push/PR.
-2. **sonarqube** — full test run + `mvn sonar:sonar`, on every push/PR.
-3. **build-and-push** — *only on push to `main`* — builds the Docker image, tags with commit SHA + `latest`, pushes both to ECR.
-4. **deploy** — *only on push to `main`* — SSHes into EC2, pulls the new image, restarts the container with `--env-file /home/<user>/task-tracker.env`.
+1. **Build & Test** — Checkstyle (non-blocking) + `mvn test` (H2) + JaCoCo coverage report
+2. **SonarQube Analysis** — Full test run + `mvn sonar:sonar` for code quality metrics, security hotspots, and coverage tracking
+3. **Docker Build & Push** — *only on push to `main`* — builds the Docker image, tags with commit SHA + `latest`, pushes both to Amazon ECR
+4. **Deploy to EC2** — *only on push to `main`* — SSHes into EC2, pulls the new image from ECR, stops/removes old container, starts new container with production environment variables, performs image cleanup
 
 ### SonarQube Setup
 Either self-hosted SonarQube or SonarCloud works — both are driven by the same `mvn sonar:sonar` goal (see the `sonar-maven-plugin` in `pom.xml`). Create the project first, grab its project key and a token, set the three `SONAR_*` secrets above. Coverage comes from the JaCoCo report generated during `mvn test`.
+
+### CI/CD Architecture
+
+This project implements a **complete DevOps pipeline** suitable for production environments:
+
+**Quality Gates:**
+- **Code Style**: Google Java Style Guide enforced via Checkstyle Maven plugin
+- **Test Coverage**: JaCoCo generates coverage reports during test execution
+- **Code Quality**: SonarQube analyzes code for bugs, code smells, security hotspots, and technical debt
+- **Build Verification**: All tests must pass before deployment proceeds
+
+**AWS Deployment Strategy:**
+- **Container Registry**: Amazon ECR stores Docker images with version tags (commit SHA + latest)
+- **Compute**: EC2 instance runs Docker containers with health checks
+- **Database**: Amazon RDS MySQL with SSL encryption
+- **Secrets Management**: Production credentials stored in GitHub Secrets, never in code
+- **Zero-Downtime**: Graceful container replacement with automatic rollback capability
+
+**Pipeline Orchestration:**
+- Jobs run sequentially with dependencies (test → SonarQube → build → deploy)
+- Only `main` branch triggers deployment to production
+- Debug steps validate secret presence before critical operations
+- Automatic image cleanup prevents disk space issues

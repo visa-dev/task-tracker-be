@@ -36,13 +36,13 @@ services:
       DB_PASSWORD: root
       DB_USE_SSL: "false"
       DB_SSL_MODE: DISABLED
-      APP_JWT_SECRET: change-this-in-production-please-use-a-long-random-string
+      APP_JWT_SECRET: N8mQz7LxP4vRw2KfY9HsTc6ZaE1JnUv5BdGpX3MiLq8WoSr4CyFhT9VkAa2Ne7Uz
       APP_JWT_EXPIRATION_MS: 3600000
       APP_ADMIN_USERNAME: admin
       APP_ADMIN_PASSWORD: Admin@123
       CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000
       SERVER_PORT: 8080
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"
 
