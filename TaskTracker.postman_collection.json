@@ -23,7 +23,7 @@
             "url": "{{baseUrl}}/auth/register",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"alice\",\n  \"password\": \"password123\"\n}"
+              "raw": "{\n  \"username\": \"aliace\",\n  \"password\": \"password123\"\n}"
             }
           }
         },
